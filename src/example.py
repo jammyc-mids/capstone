@@ -1,19 +1,42 @@
-from resloader import api as resloader_api
+from botocore import UNSIGNED
+from botocore.config import Config
+from resloader.base import ResLoader
 
-# get spatial tract lookups from S3
-spatial_tract_lookups = resloader_api.get_spatial_tract_lookups()
-print(spatial_tract_lookups.head())
-print()
+# setup
+CACHE_DIR = '/Users/darwish/Documents/Berkeley_Offline/W210/capstone/s3_cache'
+TARGET_COLS = [
+    'ceiling_fan',
+    'clothes_dryer',
+    'clothes_washer',
+    'cooking_range',
+    'cooling',
+    'heating',
+    'dishwasher',
+    'ext_lighting',
+    'interior_lighting',
+    'refrigerator',
+    'freezer'
+]
 
-# get individual building simulation keys from S3
-# takes a while to run (~2mins with 30 workers)
-individual_bldg_sim_keys = resloader_api.get_individual_bldg_sim_keys(num_workers=20)
-print(individual_bldg_sim_keys.head())
-print()
+loader = ResLoader(
+    cache_dir=CACHE_DIR,
+    s3_config=Config(signature_version=UNSIGNED),
+    sim_year='2021',
+    sim_release='resstock_amy2018_release_1',
+    sim_upgrade='0',
+    sim_level='individual',
+    sim_geo_agg='by_county',
+)
 
-# get sample building
-sample_building = individual_bldg_sim_keys['key'].sample(1).values[0]
-sample_building_df_1 = resloader_api.get_load_profile(sample_building)
-print(sample_building_df_1.head())
+# load spatial tract
+df_spatial_tract_lookups = loader.get_spatial_tract_lookups()
+print(df_spatial_tract_lookups.head(), end='\n\n')
 
-# hint: look at resloader_api docstring you can select the columns you want to load
+# load simulation keys
+df_sim_keys = loader.get_sim_keys()
+print(df_sim_keys.head(), end='\n\n')
+
+# load sample
+sample_key = df_sim_keys['key'].sample(1).values[0]
+df_sample_load = loader.get_load_profile(sample_key, include=TARGET_COLS)
+print(df_sample_load.head(), end='\n\n')
