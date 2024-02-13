@@ -1,5 +1,4 @@
 import os
-import hashlib
 import functools
 
 import concurrent.futures
@@ -10,8 +9,6 @@ import pandas as pd
 
 import boto3
 import botocore
-
-
 
 class ResLoader():
     """A class to load resources from ressotck S3 bucket"""
@@ -141,7 +138,7 @@ class ResLoader():
                     '9': 'Whole-home electrification, high efficiency + basic enclosure package (packages 1 & 8)',
                     '10': 'Whole-home electrification, high efficiency + enhanced enclosure package (packages 2 & 8)'
                 },
-                'weather_prefix':'2022/resstock_tmy3_release_1/weather/',
+                'weather_prefix':'2022/resstock_tmy3_release_1.1/weather/',
             },
         }
     }
@@ -154,37 +151,37 @@ class ResLoader():
     def get_sim_names(cls, sim_year):
         if sim_year not in cls.SIM_TREE:
             raise ValueError(f'sim_year must be one of {cls.get_sim_years()}')
-        
+
         return list(cls.SIM_TREE[sim_year].keys())
 
     @classmethod
     def get_sim_aggregate(cls, sim_year, sim_release):
         if sim_year not in cls.SIM_TREE:
             raise ValueError(f'sim_year must be one of {cls.get_sim_years()}')
-        
+
         if sim_release not in cls.SIM_TREE[sim_year]:
             raise ValueError(f'sim_release must be one of {cls.get_sim_names(sim_year)}')
-        
+
         return cls.SIM_TREE[sim_year][sim_release]['aggregate']
 
     @classmethod
     def get_sim_individual(cls, sim_year, sim_release):
         if sim_year not in cls.SIM_TREE:
             raise ValueError(f'sim_year must be one of {cls.get_sim_years()}')
-        
+
         if sim_release not in cls.SIM_TREE[sim_year]:
             raise ValueError(f'sim_release must be one of {cls.get_sim_names(sim_year)}')
-        
+
         return cls.SIM_TREE[sim_year][sim_release]['individual']
 
     @classmethod
     def get_sim_upgrades(cls, sim_year, sim_release):
         if sim_year not in cls.SIM_TREE:
             raise ValueError(f'sim_year must be one of {cls.get_sim_years()}')
-        
+
         if sim_release not in cls.SIM_TREE[sim_year]:
             raise ValueError(f'sim_release must be one of {cls.get_sim_names(sim_year)}')
-        
+
         return cls.SIM_TREE[sim_year][sim_release]['upgrades']
 
     def __init__(
@@ -244,7 +241,6 @@ class ResLoader():
         self.base_prefix = self.root + f'{sim_year}/{sim_release}/'
         print(self.base_prefix)
 
-
         _sim_level_folder = 'timeseries_individual_buildings' if sim_level == 'individual' else 'timeseries_aggregates'
         
         self.sim_prefix = self.base_prefix + f'{_sim_level_folder}/{sim_geo_agg}/upgrade={sim_upgrade}/'
@@ -259,6 +255,8 @@ class ResLoader():
         os.makedirs(self.cache_dir, exist_ok=True)
         os.makedirs(os.path.join(self.cache_dir, *self.base_prefix.split('/'), '_staged'), exist_ok=True)
         os.makedirs(os.path.join(self.cache_dir, *self.sim_prefix.split('/')), exist_ok=True)
+
+        self._df_meta_extract = None
 
     # utils
     # ---------------------------------------------------------------------------------------------- 
@@ -376,7 +374,7 @@ class ResLoader():
         return {'Contents': objects}
 
 
-    def download_s3_file(self, key):
+    def download_s3_file(self, key, prefix_validation=True):
         """
         Get a file from S3 and cache it locally
 
@@ -389,7 +387,7 @@ class ResLoader():
 
         """
 
-        if self.base_prefix not in key:
+        if prefix_validation and self.base_prefix not in key:
             raise ValueError(f'key must start with {self.base_prefix}')
 
         file_name = key.split('/')[-1]
@@ -413,7 +411,7 @@ class ResLoader():
         return file_full_path, file_extension
 
 
-    def get_s3_df(self, key):
+    def get_s3_df(self, key, prefix_validation=True):
         """
         Get a DataFrame from S3, with caching, supporting CSV and Parquet
 
@@ -430,7 +428,7 @@ class ResLoader():
             ValueError: If the file format is not supported
         """
         
-        cache_file, file_extension = self.download_s3_file(key)
+        cache_file, file_extension = self.download_s3_file(key, prefix_validation=prefix_validation)
 
         if file_extension == 'csv':
             return pd.read_csv(cache_file)
@@ -472,10 +470,14 @@ class ResLoader():
     def _get_spatial_cols(self):
 
         if self.sim_year == '2021':
-            return ['nhgis_county_gisjoin', 'resstock_county_id', 'state_abbreviation'], 'nhgis_county_gisjoin'
-        
-        return ['nhgis_2010_county_gisjoin', 'county_name', 'state_abbreviation'], 'nhgis_2010_county_gisjoin'
+            select_cols = ['nhgis_county_gisjoin', 'resstock_county_id', 'state_abbreviation']
+            join_col = 'nhgis_county_gisjoin'
 
+        else:
+            select_cols = ['nhgis_2010_county_gisjoin', 'county_name', 'state_abbreviation']
+            join_col = 'nhgis_2010_county_gisjoin'
+
+        return select_cols, join_col
 
    # ----------------------------------------------------------------------------------------------
 
@@ -497,7 +499,7 @@ class ResLoader():
             return df
 
         if self.sim_geo_agg == 'by_county':
-            county_cols, join_col = self._get_spatial_cols()
+            county_cols, _ = self._get_spatial_cols()
             return (
                 df
                 [county_cols]
@@ -512,6 +514,7 @@ class ResLoader():
             .drop_duplicates()
             .reset_index(drop=True)
         )
+
 
     def get_bldg_metadata(self):
         """
@@ -538,10 +541,37 @@ class ResLoader():
             suffix = 'baseline.parquet'
         else:
             suffix = f'upgrade_{self.sim_upgrade}.parquet'
-        
+
         key = self.base_prefix + f'metadata/{suffix}'
-        
-        return self.get_s3_df(key)
+
+        df = self.get_s3_df(key)
+
+        # save extract
+        _extract = {
+            'in.sqft': 'int16',
+            'in.geometry_building_type_recs': 'category',
+            'in.bedrooms': 'int16',
+            'in.county': 'category',
+            'in.federal_poverty_level': 'category',
+            'in.income': 'category',
+            'in.occupants': 'category',
+            'in.puma': 'category',
+            'in.state': 'category',
+            'in.tenure': 'category',
+            'in.vacancy_status': 'category',
+        }
+
+        self._df_meta_extract = df[_extract.keys()].astype(_extract)
+
+        return df
+
+
+    @property
+    def bldg_metadata_extract(self):
+        if self._df_meta_extract is None:
+            self.get_bldg_metadata()
+
+        return self._df_meta_extract
 
     def get_sim_keys(self):
         """
@@ -569,7 +599,7 @@ class ResLoader():
             return pd.read_parquet(PATH_NAME)
 
         # get from S3
-        print(self.sim_prefix)
+        print('scanning ', self.sim_prefix)
         _ls_res = self.list_objects_parallel(self.sim_prefix)
         df_keys = (
             pd.DataFrame.from_dict(_ls_res['Contents'])
@@ -582,7 +612,7 @@ class ResLoader():
 
         if self.sim_geo_agg == 'by_county':
             df_spatial = self.get_spatial_tract_lookups()
-            county_cols, join_col = self._get_spatial_cols()
+            _, join_col = self._get_spatial_cols()
 
             if self.sim_level == 'aggregate':
                 county_func = lambda x: x['file'].str.split('-').str[0].str.upper()
@@ -616,6 +646,7 @@ class ResLoader():
 
         return df_keys
 
+
     def get_weather_keys(self):
         PATH = os.path.join(
             self.key_to_path(self.base_prefix),
@@ -629,7 +660,9 @@ class ResLoader():
             return pd.read_parquet(PATH)
 
         # get from S3
-        _ls_res = self.list_objects_parallel(self.root + self.SIM_TREE[self.sim_year][self.sim_release]['weather_prefix'])
+        _prefix = self.root + self.SIM_TREE[self.sim_year][self.sim_release]['weather_prefix']
+        print('scanning ', _prefix)
+        _ls_res = self.list_objects_parallel(_prefix)
         df_keys = (
             pd.DataFrame.from_dict(_ls_res['Contents'])
             .pipe(lambda x: x.rename(columns={col:col.lower() for col in x.columns}))
@@ -643,11 +676,12 @@ class ResLoader():
         _path_head = os.path.split(PATH)[0]
         if not os.path.exists(_path_head):
             os.makedirs(_path_head)
-        
+
         df_keys.to_parquet(PATH)
 
         return df_keys
-    
+
+
     def get_weather_data(self, county_code):
         """
             Get weather data from S3
@@ -658,16 +692,23 @@ class ResLoader():
             Returns:
                 pd.DataFrame: DataFrame with weather data
         """
-        
-        weather_prefix = self.SIM_TREE[self.sim_year][self.sim_release]['weather_prefix']
-
-        prefix = self.root + weather_prefix
+        WWATHER_COL_MAP = {
+            'date_time':'date_time',
+            'Dry Bulb Temperature [°C]':'temperature',
+            'Relative Humidity [%]':'humidity',
+            'Global Horizontal Radiation [W/m2]':'gh_irradiance',
+        }
         weather_keys = self.get_weather_keys()
         key = weather_keys[weather_keys['key'].str.contains(county_code)]['key'].values[0]
-        
-        return self.get_s3_df(key)
 
-    def get_load_profile(self, key, include=None, exclude=None):
+        return (
+            self.get_s3_df(key, prefix_validation=False)
+            [WWATHER_COL_MAP.keys()]
+            .rename(columns=WWATHER_COL_MAP)
+        )
+
+
+    def get_load_profile(self, key, include=None, exclude=None, add_weather=False):
         """
             Get a load profile DataFrame from S3
 
@@ -682,8 +723,10 @@ class ResLoader():
 
         if self.sim_prefix not in key:
             raise ValueError(f'key must start with {self.sim_prefix}')
-        
-        return(
+
+        if include:
+            include += ['total']
+        df = (
             self.get_s3_df(key)
             .set_index('timestamp')
             .pipe(lambda x: x[[col for col in x.columns if self._include_column(col)]])
@@ -692,8 +735,38 @@ class ResLoader():
                 col:(col.split('.')[-2] if '.' in col else col) for col in x.columns
             }))
             .pipe(lambda x: x[[col for col in x.columns if col not in exclude]] if exclude else x)
-            .pipe(lambda x: x[[col for col in x.columns if col in include or col == 'total']] if include else x)
+            .pipe(lambda x: x[[col for col in x.columns if col in include]] if include else x)
         )
-    
+
+        if add_weather:
+            bldg_id = key.split('/')[-1].split('-')[0]
+
+            # load metadata file
+            bldg_meta = self.bldg_metadata_extract.loc[int(bldg_id), :]
+
+            # get county code
+            county_code = bldg_meta['in.county']
+
+            # get weather data
+            df_weather = self.get_weather_data(county_code)
+
+            # merge with load profile
+            df = (
+                df
+                .pipe(lambda x: x.assign(join_dt=lambda y: y.index.to_series().dt.floor('h')))
+                .reset_index()
+                .merge(
+                    df_weather.astype({'date_time': 'datetime64[ns]'}),
+                    left_on='join_dt',
+                    right_on='date_time',
+                    how='left'
+                )
+                .bfill()
+                .set_index('timestamp')
+                .drop(columns = ['join_dt', 'date_time'])
+            )
+
+        return df
+
     # ----------------------------------------------------------------------------------------------
     
