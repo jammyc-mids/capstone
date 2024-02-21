@@ -6,6 +6,7 @@ import multiprocessing
 import threading
 
 import pandas as pd
+import numpy as np
 
 import boto3
 import botocore
@@ -553,15 +554,72 @@ class ResLoader():
             'in.bedrooms': 'int16',
             'in.county': 'category',
             'in.federal_poverty_level': 'category',
-            'in.income': 'category',
-            'in.occupants': 'category',
+            'in.income': 'str',
+            'in.occupants': 'str',
             'in.puma': 'category',
             'in.state': 'category',
             'in.tenure': 'category',
             'in.vacancy_status': 'category',
         }
 
-        self._df_meta_extract = df[_extract.keys()].astype(_extract)
+        _income_maps = {
+            '<10000':'<10k',
+            '10000-14999':'10-15k',
+            '15000-19999':'15-20k',
+            '20000-24999':'20-25k',
+            '25000-29999':'25-30k',
+            '30000-34999':'30-35k',
+            '35000-39999':'35-40k',
+            '40000-44999':'40-45k',
+            '45000-49999':'45-50k',
+            '50000-59999':'50-60k',
+            '60000-69999':'60-70k',
+            '70000-79999':'70-80k',
+            '80000-99999':'80-100k',
+            '100000-119999':'100-120k',
+            '120000-139999':'120-140k',
+            '140000-159999':'140-160k',
+            '160000-179999':'160-180k',
+            '180000-199999':'180-200k',
+            '200000+':'200k+',
+        }
+
+        _income_cats = [
+            '<10k',
+            '10-15k',
+            '15-20k',
+            '20-25k',
+            '25-30k',
+            '30-35k',
+            '35-40k',
+            '40-45k',
+            '45-50k',
+            '50-60k',
+            '60-70k',
+            '70-80k',
+            '80-100k',
+            '100-120k',
+            '120-140k',
+            '140-160k',
+            '160-180k',
+            '180-200k',
+            '200k+',
+        ]
+        
+        # _occupant_cats = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10+',]
+
+        self._df_meta_extract = (
+            df[_extract.keys()].astype(_extract)
+            .rename(columns={col:col.split('.')[-1] for col in _extract.keys()})
+            .assign(
+                income = lambda x: x['income'].map(_income_maps),
+            )
+            .assign(
+                income = lambda x: pd.Categorical(x['income'], ordered=True, categories=_income_cats),
+                # occupants = lambda x: pd.Categorical(x['occupants'], ordered=True, categories=_occupant_cats)
+                occupants = lambda x: np.where(x['occupants'] == '10+', '10', x['occupants']).astype('int16')
+            )
+        )
 
         return df
 
@@ -708,7 +766,7 @@ class ResLoader():
         )
 
 
-    def get_load_profile(self, key, include=None, exclude=None, add_weather=False):
+    def get_load_profile(self, key, include=None, exclude=None, add_weather=False, add_meta=False, add_Tfeatures=False):
         """
             Get a load profile DataFrame from S3
 
@@ -738,14 +796,20 @@ class ResLoader():
             .pipe(lambda x: x[[col for col in x.columns if col in include]] if include else x)
         )
 
-        if add_weather:
-            bldg_id = key.split('/')[-1].split('-')[0]
+        if add_Tfeatures:
+            df = df.assign(
+                month = lambda x: x.index.to_series().dt.month,
+                day_of_week = lambda x: x.index.to_series().dt.dayofweek,
+                hour = lambda x: x.index.to_series().dt.hour,
+            )
 
-            # load metadata file
+        if add_weather or add_meta:
+            bldg_id = key.split('/')[-1].split('-')[0]
             bldg_meta = self.bldg_metadata_extract.loc[int(bldg_id), :]
 
+        if add_weather:
             # get county code
-            county_code = bldg_meta['in.county']
+            county_code = bldg_meta['county']
 
             # get weather data
             df_weather = self.get_weather_data(county_code)
@@ -764,6 +828,17 @@ class ResLoader():
                 .bfill()
                 .set_index('timestamp')
                 .drop(columns = ['join_dt', 'date_time'])
+            )
+
+        if add_meta:
+            df = df.assign(
+                house__state = bldg_meta['state'],
+                house__sqft = bldg_meta['sqft'],
+                house__geometry = bldg_meta['geometry_building_type_recs'],
+                house__bedrooms = bldg_meta['bedrooms'],
+                house__occupants = bldg_meta['occupants'],
+                house__tenure = bldg_meta['tenure'],
+                house__vacancy = bldg_meta['vacancy_status'],
             )
 
         return df

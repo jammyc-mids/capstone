@@ -162,3 +162,7 @@ cython_debug/
 # Mac
 .DS_Store
 
+# custom paths
+/s3_cache/*
+/data/resstock/*
+creds.py
