@@ -4,16 +4,16 @@ import sys
 import os
 import datetime as dt
 
-os.chdir('/Users/darwish/Documents/Berkeley_Offline/W210/capstone/scripts')
-sys.path.append('../src')
-
 import pandas as pd
 import numpy as np
 
 from botocore import UNSIGNED
 from botocore.config import Config
 
-from resloader.base import ResLoader
+os.chdir('/Users/darwish/Documents/Berkeley_Offline/W210/capstone/scripts')
+sys.path.append('../src')
+
+from resloader.base import ResLoader #pylint: disable=import-error
 
 # --------------------------------------------------------------------------------------------------
 # Config Directories
@@ -21,7 +21,13 @@ BASE_DIR = '/Users/darwish/Documents/Berkeley_Offline/W210/capstone/'
 
 S3_CACHE_DIR = os.path.join(BASE_DIR, 's3_cache')
 
-OUT_DIR = os.path.join(BASE_DIR, 'data', 'resstock', 'staged', dt.datetime.now().strftime('%Y%m%d%H%M%S'))
+OUT_DIR = os.path.join(
+    BASE_DIR,
+    'data',
+    'resstock',
+    'staged',
+    dt.datetime.now().strftime('%Y%m%d%H%M%S')
+)
 
 # Config Parameters
 N_profiles = 50
@@ -262,7 +268,7 @@ if __name__ == '__main__':
         .drop(['h__vacancy_status', 'h__tenure'], axis=1)
         .reset_index(drop=True)
         .sample(frac=1, random_state=42)
-        # assign to 5 partitions randomly
+        # assign each building to 5 partitions randomly
         .assign(k__partition = lambda x: x.index % N_partitions)
     )
 
@@ -303,12 +309,17 @@ if __name__ == '__main__':
         .drop(columns='k__bldg_id_2')
         [OUT_COLS]
         .pipe(lambda x: x.astype({k:'float' for k in x.columns}))
+        .sample(frac=1, random_state=42)
     )
 
     if not os.path.exists(OUT_DIR):
         os.makedirs(OUT_DIR)
 
     print(f'Writing to {OUT_DIR} ...')
-    for grp, df in df_out.groupby('k__partition'):
+    for grp, grp_df in df_out.groupby('k__partition'):
         print(f'Writing partition {int(grp)} ... ')
-        df.to_parquet(os.path.join(OUT_DIR, f'partiion={int(grp)}.parquet'), index=False)
+        (
+            grp_df
+            .sample(frac=1, random_state=1993)
+            .to_parquet(os.path.join(OUT_DIR, f'partition={int(grp)}.parquet'), index=False)
+        )
