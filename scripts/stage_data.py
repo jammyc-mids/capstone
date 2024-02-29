@@ -10,15 +10,14 @@ import numpy as np
 from botocore import UNSIGNED
 from botocore.config import Config
 
-os.chdir('/Users/darwish/Documents/Berkeley_Offline/W210/capstone/scripts')
+os.chdir('/Users/darwish/Documents/Berkeley_Offline/W210/capstone/scripts') #<<<<<<<<<<<<<<<<<<<<<<< change this to your path
 sys.path.append('../src')
 
 from resloader.base import ResLoader #pylint: disable=import-error
 
 # --------------------------------------------------------------------------------------------------
 # Config Directories
-BASE_DIR = '/Users/darwish/Documents/Berkeley_Offline/W210/capstone/'
-
+BASE_DIR = '/Users/darwish/Documents/Berkeley_Offline/W210/capstone/' #<<<<<<<<<<<<<<<<<<<<<<<<<<<<< change this to your path
 S3_CACHE_DIR = os.path.join(BASE_DIR, 's3_cache')
 
 OUT_DIR = os.path.join(
@@ -30,8 +29,8 @@ OUT_DIR = os.path.join(
 )
 
 # Config Parameters
-N_profiles = 50
-N_partitions = 5
+N_profiles = 50 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< change this to the number of profiles you want
+N_partitions = 5 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< change this to the number of partitions you want
 
 # --------------------------------------------------------------------------------------------------
 
@@ -56,6 +55,8 @@ PROFILE_MAPPING = dict([
     ('out.electricity.lighting_interior.energy_consumption', 'y__lighting_interior'),
     ('out.electricity.range_oven.energy_consumption', 'y__range_oven'),
     ('out.electricity.refrigerator.energy_consumption', 'y__refrigerator'),
+    ('out.electricity.total.energy_consumption', 'x__aggregate'),
+
 ])
 
 METADATA_MAPPING = dict([
@@ -288,7 +289,7 @@ if __name__ == '__main__':
             y__heating = lambda x: np.round(x['y__heating'] + x['y__heating_fans_pumps'], 3),
         )
         .assign(
-            x__aggregate = lambda x: x[LOAD_LIST].sum(axis=1),
+            # x__aggregate = lambda x: x[LOAD_LIST].sum(axis=1),
             k__seq = lambda x: (
                 ((x['timestamp'].dt.hour * 4) + (x['timestamp'].dt.minute / 15))
                 .astype(int).astype(str).str.zfill(2)
