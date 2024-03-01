@@ -99,22 +99,14 @@ class dataLoader:
 	def split_train_test(self, num_houses=-1):
 		print(f"Loading [{num_houses}] houses data...")
 		df = self.load_traindata(num_houses)
-#		for entry in df.iterrows():
-#			pdb.set_trace()
-		for month in range(1,13):
-			# split first 3 weeks of each month for train
-			# last week of each month for test
-			# for each month, take date 1st to 21st
-			traindata.loc[(traindata.index.day >= 1) & (traindata.index < end_date)]
-				
-		
+		# split first 3 weeks of each month for train
+		# last week of each month for test
+		# for each month, take date 1st to 21st
+		train = df.loc[(df.index.day >= 1) & (df.index.day <= 21)]
+		test = df.loc[(df.index.day > 21) & (df.index.day <= 31)]
+		print(f"Train: [{len(train)}], Test: [{len(test)}]")
+		return train,test
 
-
-#start_date = datetime(2018, 1, 1)
-#end_date = datetime(2018, 1, 22)
-
-
-# first 3 weeks of every month for training, last week for validation.
 
 # setup
 config = {
@@ -127,7 +119,8 @@ config = {
 	}
 
 dl = dataLoader(config)
-dl.load_samples()
-#traindata = dl.split_train_test(100)
+#dl.load_samples()
+train,test = dl.split_train_test(100)
 pdb.set_trace()
-print(traindata)
+print(train)
+print(test)
