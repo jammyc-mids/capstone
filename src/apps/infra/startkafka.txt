@@ -1,0 +1,11 @@
+zookeeper: 
+/opt/homebrew/bin/zookeeper-server-start /opt/homebrew/etc/zookeeper/zoo.cfg
+port 2181
+
+/opt/homebrew/bin/zookeeper-server-start
+
+Kafka:
+
+/opt/homebrew/bin/kafka-server-start /opt/homebrew/etc/kafka/server.properties
+
+/opt/homebrew/bin/kafka-server-start
