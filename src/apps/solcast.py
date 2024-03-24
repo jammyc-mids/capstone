@@ -80,17 +80,16 @@ class solcastData():
         
     def getSolarData(self, lat, long, dlist):
        skey = self.convertLatLongToString(lat, long)
-       try:
-           result = {}
-           for dd in dlist: 
+       result = {}
+       for dd in dlist: 
+           try:
                rdata = self.rdconn.rejsonGet(skey, f".{dd}") 
                if rdata:
                    result[dd] = rdata
-           # skip any days cannot be found 
-           return result
-       except:
-           print(f"Irradiance data is not available for Lat:{lat}, Long:{long} on {start}")
-           return {}
+           except:
+               # skip any days cannot be found 
+               print(f"Irradiance data is not available for Lat:{lat}, Long:{long} on {dd}")
+       return result
 
 # Berkeley CA
 #solcastData().updateSolarData(37.8718, -122.2718, '2024-02-01', 29)
