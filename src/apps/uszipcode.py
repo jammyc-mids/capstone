@@ -55,3 +55,10 @@ class USZipCodes():
          print(f"Unknown state {state}")
          return (0.0, 0.0)
 
+   def getZipByCounty(self, county):
+      try:
+         # there maybe more than one return, just return the first matched entry
+         return [entry['zip_code'] for entry in self.zipcodes_data if 'county' in entry and re.search(r'^%s' % county.upper(), entry['county'].upper())]
+      except:
+         print(f"Unknown country {county}")
+         return []
