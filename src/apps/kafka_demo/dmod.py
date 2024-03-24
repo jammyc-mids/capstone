@@ -9,4 +9,5 @@ while True:
         print(f"[DISAGGREGATION]: {data}")
     except:
         kf.consumer.close()
+        break
 
