@@ -23,16 +23,31 @@ class energyApps:
             return []
         return coordinates
 
+    def searchZips(self, req):
+        return self.locale.getZipByCounty(req['county'])
+
 app = Flask(__name__)
 
 @app.route("/")
 def ping() -> str:
     return "I am still alive."
 
-@app.route('/lookupCoordinates', methods=['POST'])
+@app.route('/lookupCoordinates', methods=['GET'])
 def getCoordinates():
     req = request.get_json()
     result = eapp.searchCoordinates(req)
+    if result:
+        return {'status' : 'SUCCESS', 'result' : result}
+    else:
+        return {'status' : 'FAIL', 'result' : 'Missing required arguments'}
+
+@app.route('/lookupZips', methods=['GET'])
+def getZips():
+    req = request.get_json()
+    if 'county' not in req:
+        return {'status' : 'FAIL', 'result' : 'Missing required county name.'}
+
+    result = eapp.searchZips(req)
     if result:
         return {'status' : 'SUCCESS', 'result' : result}
     else:
@@ -60,9 +75,10 @@ def updateRadiance():
     else:
         return {'status' : 'FAIL', 'result' : f"Unable to update Radiance data for coordinates {coordinates} for start date on {startdate} with duration [{duration}]."}
 
-@app.route('/getRadianceData', methods=['POST'])
+@app.route('/getRadianceData', methods=['GET'])
 def getRadiance():
     req = request.get_json()
+    pdb.set_trace()
     if 'dates' not in req:
         return {'status' : 'FAIL', 'result' : 'Missing required dates arguments'}
     
