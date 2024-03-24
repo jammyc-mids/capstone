@@ -24,15 +24,18 @@ class kafkaConnector:
     def receive_messages(self):
         while True:
             print(f"Staring consumer polling...")
-            msg = self.consumer.poll(1.0)  # Poll for new messages
-            if msg is None:
-                continue
-            if msg.error():
-                print("Consumer error: {}".format(msg.error()))
-                continue
-            data = json.loads(msg.value().decode('utf-8'))
-            #print("Received message: ", data)
-            return data
+            try:
+                msg = self.consumer.poll(1.0)  # Poll for new messages
+                if msg is None:
+                    continue
+                if msg.error():
+                    print("Consumer error: {}".format(msg.error()))
+                    continue
+                data = json.loads(msg.value().decode('utf-8'))
+                #print("Received message: ", data)
+                return data
+            except:
+                break
 
     def start_producer(self):
         print("Started producer...")
