@@ -13,4 +13,5 @@ while True:
         kf.send_message('disaggregation', data)
     except:
         kf.consumer.close()
+        break
 
