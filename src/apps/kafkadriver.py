@@ -24,7 +24,7 @@ class kafkaConnector:
 
     def receive_messages(self):
         while True:
-            print(f"Staring consumer polling...")
+#            print(f"Staring consumer polling...")
             msg = self.consumer.poll(1.0)  # Poll for new messages
             if msg is None:
                 continue
@@ -36,14 +36,14 @@ class kafkaConnector:
             return data
 
     def start_producer(self):
-        print("Started producer...")
+        #print("Started producer...")
         self.producer = Producer(self.producer_conf)
 
     def start_consumer(self, topic):
         if hasattr(self, 'consumer'):
             print("Close existing consumer...")
             self.consumer.close() 
-        print(f"Started consumer on topic [{topic}]...")
+        #print(f"Started consumer on topic [{topic}]...")
         self.consumer = Consumer(self.consumer_conf)
         self.consumer.subscribe([topic])
 
