@@ -1,4 +1,5 @@
 from kafkadriver import kafkaConnector
+from pgdriver import pgConnector
 import requests
 import subprocess
 import json, re
@@ -55,6 +56,7 @@ class workerPool:
                 # need to revisit this
                 req = {'net' : data['net'][96:]}
                 presult = self._requestPrediction(topic, req)
+                data['clf_result'] = presult[0]
                 if presult[0] > self.pv_clf_threshold:
                     print(f"[{topic.upper()}]: PV installation detected. [{presult[0]}]")
                     print(f"[{topic.upper()}]: Relaying data to disaggregation...")
@@ -78,9 +80,11 @@ class workerPool:
         while True:
             try:
                 data = self.kafkaConn.receive_messages()
+                # only need both net and irrad data
+                req = {'net' : data['net'], 'irrad' : data['irrad']}
                 print(f"[{topic.upper()}]: Perform disaggregation...")
-                presult = self._requestPrediction(topic, data)
-                data['result'] = {topic : presult[0]}
+                presult = self._requestPrediction(topic, req)
+                data['dis_result'] = presult[0]
                 print(f"[{topic.upper()}]: PV prediction: [{presult[0]}]")
                 print(f"[{topic.upper()}]: Relaying data to result recorder...")
                 self.kafkaConn.send_message('result_recorder', data)
