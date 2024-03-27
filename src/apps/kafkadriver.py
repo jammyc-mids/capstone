@@ -1,4 +1,5 @@
-from confluent_kafka import Producer, Consumer
+from confluent_kafka import Producer, Consumer 
+from concurrent.futures import ThreadPoolExecutor
 import json
 
 class kafkaConnector:
@@ -24,18 +25,15 @@ class kafkaConnector:
     def receive_messages(self):
         while True:
             print(f"Staring consumer polling...")
-            try:
-                msg = self.consumer.poll(1.0)  # Poll for new messages
-                if msg is None:
-                    continue
-                if msg.error():
-                    print("Consumer error: {}".format(msg.error()))
-                    continue
-                data = json.loads(msg.value().decode('utf-8'))
-                #print("Received message: ", data)
-                return data
-            except:
-                break
+            msg = self.consumer.poll(1.0)  # Poll for new messages
+            if msg is None:
+                continue
+            if msg.error():
+                print("Consumer error: {}".format(msg.error()))
+                continue
+            data = json.loads(msg.value().decode('utf-8'))
+            #print("Received message: ", data)
+            return data
 
     def start_producer(self):
         print("Started producer...")
@@ -48,4 +46,8 @@ class kafkaConnector:
         print(f"Started consumer on topic [{topic}]...")
         self.consumer = Consumer(self.consumer_conf)
         self.consumer.subscribe([topic])
+
+    def start_consumer_threads(self, topic, num_threads=1):
+        with ThreadPoolExecutor(max_workers=num_threads) as executor:
+            executor.map(self.start_consumer, topic)
 
