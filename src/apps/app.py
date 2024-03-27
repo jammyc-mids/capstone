@@ -5,13 +5,14 @@ from gevent.pywsgi import WSGIServer
 from uszipcode import USZipCodes
 from solcast import solcastData
 from kafkadriver import kafkaConnector
+import pdb
 
 class energyApps:
     def __init__(self):
         self.locale = USZipCodes()
         self.solcast = solcastData()
-	self.kafkaConn = kafkaConnector()
-	self.kafkaConn.start_producer()
+        self.kafkaConn = kafkaConnector()
+        self.kafkaConn.start_producer()
 
     def searchCoordinates(self, req):
         if 'zip' in req:
@@ -82,21 +83,15 @@ def getRadiance():
 @app.route('/predict', methods=['POST'])
 def predict():
     req = request.get_json()
-    # need to do the following
-    # Based on load input signal, zip code (producer)
-    # 1) Convert zip to coordinates
-    # 2) Extract radiance data based on coordinates
-    # 3) Post load input and radiance coordinates to kafka queue
-    # 4) Classification model consumes the inputs and see if household has PV. If has PV, post the data to 'disaggregrate' 
-    #    kafka queue (both producer and consumer)
-    # 5) Disaggregation model consumes the inputs and predict the PV signals (consumer), once complete,
-    #    a) post to anther update topic for other workers to update to PostgreSQL database
-    #    b) update directly to PostgreSQL database
-#data = {'load' : [0.0, 0.3, 0.4, 0.5, 0.1, 0.0], 'radiance' : [0.0, 0.0, 123.3, 222.1, 22.3, 0]}
-#self.kafkaConn.send_message('classification', data)
-
+    try:
+        eapp.kafkaConn.send_message('classification', req)
+        print(f"Predict request posted. Net:{len(req['net'])}, Irr:{len(req['irradiance'])}")
+        return {'status' : 'SUCCESS', 'result' : "Request posted."}
+    except:
+        return {'status' : 'FAIL', 'result' : "Request failed."}
  
 if __name__ == "__main__":
     eapp = energyApps()
     http_server = WSGIServer(("0.0.0.0", 20100), app)
+    print(f"Energy Data Service started @ port 20100")
     http_server.serve_forever()
