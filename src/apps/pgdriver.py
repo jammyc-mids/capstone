@@ -4,7 +4,7 @@ import re
 
 class pgDriver:
     def __init__(self, autocommit=False):
-        self.server = "ec2-34-221-49-209.us-west-2.compute.amazonaws.com"
+        self.server = "localhost"
         self.database = "energy_transformers"
         self.username = "capstone"
         self.password = "Mids2024!"
