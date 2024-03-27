@@ -4,11 +4,14 @@ from flask import jsonify
 from gevent.pywsgi import WSGIServer
 from uszipcode import USZipCodes
 from solcast import solcastData
+from kafkadriver import kafkaConnector
 
 class energyApps:
     def __init__(self):
         self.locale = USZipCodes()
         self.solcast = solcastData()
+	self.kafkaConn = kafkaConnector()
+	self.kafkaConn.start_producer()
 
     def searchCoordinates(self, req):
         if 'zip' in req:
@@ -22,9 +25,6 @@ class energyApps:
         else:
             return []
         return coordinates
-
-    def searchZipsByCounty(self, county):
-        return self.locale.getZipByCounty(county)
 
 app = Flask(__name__)
 
@@ -40,19 +40,6 @@ def getCoordinates():
         return {'status' : 'SUCCESS', 'result' : result}
     else:
         return {'status' : 'FAIL', 'result' : 'Missing required arguments'}
-
-@app.route('/lookupZips', methods=['GET'])
-def getZips():
-    try:
-        county = request.args.get('county')
-    except:
-        return {'status' : 'FAIL', 'result' : 'Missing required county name.'}
-
-    result = eapp.searchZipsByCounty(county)
-    if result:
-        return {'status' : 'SUCCESS', 'result' : result}
-    else:
-        return {'status' : 'FAIL', 'result' : f"County [{county}] not found"}
 
 @app.route('/updateRadianceData', methods=['POST'])
 def updateRadiance():
@@ -105,7 +92,8 @@ def predict():
     # 5) Disaggregation model consumes the inputs and predict the PV signals (consumer), once complete,
     #    a) post to anther update topic for other workers to update to PostgreSQL database
     #    b) update directly to PostgreSQL database
-
+#data = {'load' : [0.0, 0.3, 0.4, 0.5, 0.1, 0.0], 'radiance' : [0.0, 0.0, 123.3, 222.1, 22.3, 0]}
+#self.kafkaConn.send_message('classification', data)
 
  
 if __name__ == "__main__":
