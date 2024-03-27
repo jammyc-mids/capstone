@@ -2,7 +2,7 @@ import psycopg2
 import json
 import re
 
-class pgDriver:
+class pgConnector:
     def __init__(self, autocommit=False):
         self.server = "localhost"
         self.database = "energy_transformers"
