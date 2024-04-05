@@ -3,13 +3,14 @@ import json
 import re
 
 class pgConnector:
-    def __init__(self, autocommit=False):
+    def __init__(self, transaction=False, autocommit=False):
         self.server = "localhost"
         self.database = "energy_transformers"
         self.username = "capstone"
         self.password = "Mids2024!"
         self.dbh = self._connect(self.database, self.server, self.username, self.password)
         self.cur = self.dbh.cursor()
+        self.transaction_mode = transaction
         self.dbh.autocommit = autocommit
  
     def _connect(self, dbname, server, user, passwd): 
@@ -28,6 +29,12 @@ class pgConnector:
 
     def _update(self, query):
         self.cur.execute(query)
-        if self.dbh.autocommit == False:
+        if self.dbh.autocommit == True and self.transaction_mode == False:
             self.dbh.commit()
         return self.cur.rowcount
+
+    def _insert(self, query):
+        self.cur.execute(query)
+        if self.dbh.autocommit == True and self.transaction_mode == False:
+            self.dbh.commit()
+        return self.cur.fetchone()[0]
