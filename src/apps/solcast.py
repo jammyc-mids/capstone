@@ -29,7 +29,7 @@ import re
 
 class solcastData():
     def __init__(self):
-        self.api_key = "jlJtypiMie8xwaN_1lPJ_tX3agCbvwbo"
+        self.api_key = "pVL8X3yMVN7CeORhrG4joLQW64G4soeZ"
         self.url_root = "https://api.solcast.com.au/data/"
         self.dtype = "historic/radiation_and_weather"
         self.rdconn = rejsonConnector()
@@ -72,15 +72,25 @@ class solcastData():
                        idata[current_date] = []
                idata[current_date].append({'air_temp' : entry['air_temp'], 'ghi' : entry['ghi']})
        try:
-           self.rdconn.rejsonSet(skey, ".", idata) 
+           self.rdconn.rejsonUpdate(skey, ".", idata) 
            return True
        except:
-           print(f"Unable to update Redis for {skey}.")
-           return False
+           try:
+              self.rdconn.rejsonSet(skey, ".", idata) 
+              return True
+           except:
+              print(f"Unable to update Redis for {skey}.")
+              return False
         
-    def getSolarData(self, lat, long, dlist):
+    def getSolarData(self, lat, long, dlist=[]):
        skey = self.convertLatLongToString(lat, long)
        result = {}
+
+       if len(dlist) == 0:
+           # return the whole list from GPS coordinates
+           return self.rdconn.rejsonGet(skey, f".") 
+      
+       # if dlist is defined with dates
        for dd in dlist: 
            try:
                rdata = self.rdconn.rejsonGet(skey, f".{dd}") 
