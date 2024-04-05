@@ -24,5 +24,6 @@ class rejsonConnector:
       # to add new subkey in a level N+1
       # e.g. Add/update new irradiance data for a specific date 
       tdata = self.rejsonGet(key, path)
-      tdata[uk] = udata[uk]
+      for uk in udata:
+         tdata[uk] = udata[uk]
       self.rejsonSet(key, path, tdata)
