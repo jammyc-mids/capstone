@@ -108,7 +108,11 @@ class workerPool:
                 data = self.kafkaConn.receive_messages()
                 print(f"[{topic.upper()}]: Received data:\n\t{data}")
                 query = f"update house set has_solar={data['has_solar']} where house_id={data['house_id']}"
-                self.pgh._update(query)
+                try:
+                    self.pgh._update(query)
+                except:
+                    print(f"Unable to update house property: {data['house_id']}")
+                    pass
 
                 if 'pv_result' not in data:
                     # set default for non-PV house to 0.0
@@ -116,13 +120,21 @@ class workerPool:
 
                 query = f"insert into prediction_results (house_id, timestamp, clf_result, pv_result) values "
                 query += f"({data['house_id']}, TO_TIMESTAMP('{data['current_ts']}', 'YYYY-MM-DD HH24:MI'), {data['clf_result']}, {data['pv_result']}) returning *"
-                self.pgh._update(query)
+                try:
+                    self.pgh._update(query)
+                except:
+                    print(f"Unable to insert prediction_results: {data['house_id']}")
+                    pass
 
                 #Store predicted PV step in pv_load_ts table
                 query = f"insert into pv_load_ts (meter_id, h_timestamp, month, day, year, timestamp, pv_value) values "
                 query += f"({data['meter_id']}, TO_TIMESTAMP('{data['current_hm']}', 'HH24:MI'), {data['current_month']}, {data['current_day']}, {data['current_year']}, "
                 query += f"TO_TIMESTAMP('{data['current_ts']}', 'YYYY-MM-DD HH24:MI'), {data['pv_result']}) returning *"
-                self.pgh._update(query)
+                try:
+                    self.pgh._update(query)
+                except:
+                    print(f"Unable to insert pv_load_ts: {data['house_id']}")
+                    pass
                 self.pgh.dbh.commit()
 
             except:
