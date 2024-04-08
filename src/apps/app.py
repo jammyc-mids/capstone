@@ -6,6 +6,7 @@ from uszipcode import USZipCodes
 from solcast import solcastData
 from kafkadriver import kafkaConnector
 import pdb
+#import pgAPI as pgapi
 
 class energyApps:
     def __init__(self):
@@ -67,18 +68,19 @@ def updateRadiance():
 @app.route('/getRadianceData', methods=['POST'])
 def getRadiance():
     req = request.get_json()
-    if 'dates' not in req:
-        return {'status' : 'FAIL', 'result' : 'Missing required dates arguments'}
-    
     coordinates = eapp.searchCoordinates(req)
     if len(coordinates) == 0:
         return {'status' : 'FAIL', 'result' : f"Coordinates are not found from {req}."}
      
-    sdata = eapp.solcast.getSolarData(coordinates[0], coordinates[1], req['dates'])
+    try:
+        dates = req['dates']
+    except:
+        dates = []
+    sdata = eapp.solcast.getSolarData(coordinates[0], coordinates[1], dates)
     if sdata:
         return {'status' : 'SUCCESS', 'result' : sdata}
     else:
-        return {'status' : 'FAIL', 'result' : f"Irradiance data not available for {coordinates} on {req['dates']}"}
+        return {'status' : 'FAIL', 'result' : f"Irradiance data not available for {coordinates} on {dates}"}
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -89,7 +91,49 @@ def predict():
         return {'status' : 'SUCCESS', 'result' : "Request posted."}
     except:
         return {'status' : 'FAIL', 'result' : "Request failed."}
- 
+
+@app.route('/getStatsByHouse', methods=['POST'])
+def getStatsByHouse():
+    try:
+        req = request.get_json()
+        house_id = req['house_id']
+        timestamp = req['timestamp']
+        #print(pgapi.getLastRecordingByHouse(house_id, timestamp))
+        #last_pv, last_net_load = pgapi.getLastRecordingByHouse(house_id, timestamp)
+        print(last_pv, last_net_load)
+        #gross_load = pgapi.getGrossLoad(last_pv, last_net_load)
+        print(gross_load)
+        #pv_penetration = pgapi.getPVPenetration(last_pv, gross_load)
+        print(pv_penetration)
+        result = { 'gross_load' : gross_load, 'pv_penetration' : pv_penetration }
+
+        return {'status' : 'SUCCESS', 'result' : result}
+    except Exception as e:
+        return {'status' : 'FAIL', 'result' : 'Request failed. ' + e}
+"""
+@app.route('/getStatsByCounty', methods=['POST'])
+def getStatsByCounty():
+    try:
+        req = request.get_json()
+        county_id = req['county_id']
+        #timestamp = req['timestamp']
+        #print(pgapi.getLastRecordingByCounty(county_id, timestamp))
+        print(pgapi.getLastRecordingByCounty(county_id))
+        return {'status' : 'SUCCESS', 'result' : 'Request posted.'}
+    except:
+        return {'status' : 'FAIL', 'result' : 'Request failed.'}
+
+@app.route('/getStatsByState', methods=['POST'])
+def getStatsByState():
+    try:
+        req = request.get_json()
+        state_id = req['state_id']
+        #timestamp = req['timestamp']
+        #print(pgapi.getLastRecording(house_id, timestamp))
+        return {'status' : 'SUCCESS', 'result' : 'Request posted.'}
+    except:
+        return {'status' : 'FAIL', 'result' : 'Request failed.'}
+"""
 if __name__ == "__main__":
     eapp = energyApps()
     http_server = WSGIServer(("0.0.0.0", 20100), app)
