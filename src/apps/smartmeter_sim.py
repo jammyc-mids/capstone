@@ -16,7 +16,7 @@ def get_EC2_public_address(instance):
 
 def get_irradiance_sequence(idata, day, hour, minute):
     if day not in idata:
-        print(f"Day for found in irradiance data: {day}")
+        print(f"Day not found in irradiance data: {day}")
         return 0
 
     #print(f"irradance size: {len(idata[day])} on day [{day}]")
@@ -39,13 +39,16 @@ df = pd.read_csv("/opt/data/pecan/pecan_meta.csv")
 houses = list(set(df['house_id']))
 print(houses)
 headers = {'Content-Type': 'application/json'}
-port = 20101
+port = 20100
 app_host = get_EC2_public_address("csprod-infra-01")
 
 url = f"http://{app_host}:{port}/getRadianceData"
 # use startdate and duration
 #houses = [3687, 9160]
-houses = [9160]
+houses = [
+#387, 1417, 142, 2318, 914, 27, 3996, 3488, 5679, 2096, 558, 2358, 950, 3000, 4283, 3517, 5058, 4550, 1222, 5587, 1240, 9053, 5982, 5997, 3700
+4550, 1222, 5587, 1240, 9053, 5982, 5997, 3700
+]
 
 pdb.set_trace()
 for h in houses:
@@ -81,7 +84,8 @@ for h in houses:
       full_ts = timeobj.strftime('%Y-%m-%d %H:%M')
       print(f"Processing timestamp [{full_ts}]...")
       hm_ts = timeobj.strftime('%H:%M')
-      if not (mon == 1 and day in [1,2]):
+      #if not (mon == 1 and day in [1,2]):
+      if not (mon == 5 and day in [1,2]):
          # get the net_load and irradiance data
          #time.sleep(1)
          payload['house_id'] = h
