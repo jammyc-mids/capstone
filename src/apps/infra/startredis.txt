@@ -1,0 +1,3 @@
+redis-stack-server
+
+brew services start Redis
