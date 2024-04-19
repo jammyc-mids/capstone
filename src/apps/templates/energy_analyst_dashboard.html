@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid p-0" style="width:100%;">
+        <div class="col-md-8"  style="width:100%;max-width:100%;">
+            <div class="card bg-dark text-light">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4"></h2>
+                    <div class="btn-group d-flex" role="group" aria-label="Dashboard Navigation">
+                        <button type="button" class="btn btn-primary flex-grow-1" id="statistics-btn">Statistics</button>
+                        <button type="button" class="btn btn-primary flex-grow-1" id="live-pv-btn">Live PV</button>
+                    </div>
+                    <iframe id="dashboard-iframe" width="100%" height="600" class="border-0 mt-4"></iframe>
+                </div>
+            </div>
+        </div>
+</div>
+{% endblock %}
+
+
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var statisticsBtn = document.querySelector('#statistics-btn');
+        var livePvBtn = document.querySelector('#live-pv-btn');
+        var dashboardIframe = document.querySelector('#dashboard-iframe');
+
+
+
+
+
+
+
+
+
+
+
+
+        // Function to load the Dash app into the iframe
+        function loadDashApp(url) {
+
+
+
+
+
+	//url = "http://34.211.53.131:8050";
+
+
+	//		alert(url);
+            dashboardIframe.src = url;
+        }
+
+        if (statisticsBtn && livePvBtn && dashboardIframe) {
+            // Load the default Dash app (Statistics) when the page loads
+            loadDashApp('http://34.209.19.81:8050');
+
+            statisticsBtn.addEventListener('click', function() {
+                // Load the Statistics Dash app when clicked
+                loadDashApp('http://34.209.19.81:8050');
+            });
+
+            livePvBtn.addEventListener('click', function() {
+                // Load the Live PV Dash app when clicked
+                loadDashApp('http://34.209.19.81:8052');
+            });
+        }
+    });
+</script>
+{% endblock %}

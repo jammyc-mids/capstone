@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - Energy Dashboard{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card bg-secondary">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">Login</h2>
+                <form action="/login" method="POST">
+                    <div class="form-group">
+                        <label for="user_type">Select User Type:</label>
+                        <select id="user_type" name="user_type" class="form-control">
+                            <option value="residential">Residential Customer</option>
+                            <option value="analyst">Energy Analyst</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Login</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

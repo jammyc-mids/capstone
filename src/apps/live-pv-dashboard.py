@@ -1,74 +1,109 @@
 import dash
+from dash import dash_table
 from dash import dcc, html
 from dash.dependencies import Input, Output, State
+import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.graph_objs as go
 import pgAPIpecan as pgapi
+import subprocess
 
 selected_house_id = 2818
 timestamp = pd.to_datetime("11am on 10/11/2018")
 end_timestamp = pd.to_datetime("11am on 10/12/2018")
 
+external_stylesheets = [dbc.themes.DARKLY]
+
 app = dash.Dash(__name__)
 
 dark_theme_styles = {
-    'background-color': '#343a40',
+    'background-color': '#222222',
     'color': '#6c757d',
 }
 
 state_list_unique = pgapi.getStates()
 state_select = [{"label": item, "value": item} for item in state_list_unique]
 
-app.layout = html.Div(style=dict(dark_theme_styles, **{'height': '100vh'}), children=[
-    html.Div(className='col-md-6', children=[
-                                html.H3('Select Date'),
-                                dcc.DatePickerRange(
-                                    id='date-time-range',
-                                    start_date=timestamp,
-                                    end_date=end_timestamp,
-                                    display_format='YYYY-MM-DD'
-                                )
-                            ]),
-    html.Div(className='dropdowns', style={'padding': '10px'}, children=[
-        dcc.Dropdown(
-            id='tb-state-dropdown',
-            placeholder='Select State',
-            options=state_select,
-            value='',
-            style={'color': '#6c757d', 'padding-bottom':'5px'}
-        ),
-        dcc.Dropdown(
-            id='tb-county-dropdown',
-            placeholder='Select County',
-            disabled=True,
-            value='',
-            style={'color': '#6c757d', 'padding-bottom':'5px'}
-        ),
-        dcc.Dropdown(
-            id='tb-household-dropdown',
-            placeholder='Select Household',
-            multi=True,
-            disabled=True,
-            value='',
-            style={'color': '#6c757d', 'padding-bottom':'5px'}
-        )
-    ]),
-    html.Div([
-        html.Button('Start', id='start-button', n_clicks=0, style={'margin': '5px'}),
-        html.Button('Pause', id='pause-button', n_clicks=0, style={'margin': '5px'}),
-    ]),
-    html.Div(id='top-graph-container', style={'height': '50vh', 'padding': '10px'}, children=[
-        html.H1(id='house-title', style={'textAlign': 'center'}),
-        dcc.Graph(id='irradiance-graph', style={'height': '100%'})
-    ]),
-    html.Div(style={'height': '50vh', 'padding': '10px'}, children=[
-        dcc.Graph(id='net-load-pv-graph', style={'height': '100%'})
-    ]),
-    dcc.Interval(id='interval-component', interval=1000, n_intervals=0),
-    dcc.Store(id='selected_house_id', data=selected_house_id),
-    dcc.Store(id='timestamp', data=timestamp),
-    dcc.Store(id='end_timestamp', data=end_timestamp)
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets, suppress_callback_exceptions=True)
+app.css.append_css({"external_url": "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"})
+
+app.layout = dbc.Container([
+    html.Div(id="page-content"),html.Div(className='wrapper', style={'background-color': '#222222'}, children=[
+        html.Div(className='content-wrapper', style={'margin-right': '5%', 'margin-left':'5%', \
+            'margin-bottom':'5%', 'margin-top':'3%', 'background-color': '#222222'}, children=[
+            html.H1(id='house-title', style={'textAlign': 'left', 'padding-left':'10px', \
+                    'padding-bottom':'10px', 'background-color': '#222222'}),
+            html.Div(className='content', style={'background-color': '#222222'}, children=[
+                html.Div(className='container-fluid', style={'background-color': '#222222'}, children=[
+                    html.Div(className='row', style={'background-color': '222222'}, children=[
+                        html.Div(className='col-md-6', style={'background-color': '#222222'}, children=[
+                            html.H3('Select Date'),
+                            dcc.DatePickerRange(
+                                id='date-time-range',
+                                start_date=timestamp,
+                                end_date=end_timestamp,
+                                display_format='YYYY-MM-DD'
+                            )
+                        ]),
+                        html.Div(className='col-md-6', children=[
+                            html.H3('Select Location'),
+                            dcc.Dropdown(
+                                id='tb-state-dropdown',
+                                placeholder='Select State',
+                                options=state_select,
+                                value='',
+                                style={'color': '#6c757d', 'padding-bottom':'5px'}
+                            ),
+                            dcc.Dropdown(
+                                id='tb-county-dropdown',
+                                placeholder='Select County',
+                                disabled=True,
+                                value='',
+                                style={'color': '#6c757d', 'padding-bottom':'5px'}
+                            ),
+                            dcc.Dropdown(
+                                id='tb-household-dropdown',
+                                placeholder='Select Household',
+                                multi=True,
+                                disabled=True,
+                                value='',
+                                style={'color': '#6c757d', 'padding-bottom':'5px'}
+                            )
+                        ])
+                    ])
+                ]),
+                html.Div([
+                    html.Button('Start', id='start-button', n_clicks=0, style={'margin': '5px'}),
+                    html.Button('Pause', id='pause-button', n_clicks=0, style={'margin': '5px'}),
+                ]),
+                html.Div(id='top-graph-container', style={'height': '50vh', \
+                        'padding': '10px'}, children=[
+                    dcc.Graph(id='irradiance-graph', style={'height': '100%'}, \
+                        config={'displayModeBar': False}, figure={
+                        'layout': {
+                            'plot_bgcolor': '#222222',
+                                'paper_bgcolor': '#222222',
+                        }
+                    })
+                ]),
+                html.Div(style={'height': '50vh', 'padding': '10px'}, children=[
+                    dcc.Graph(id='net-load-pv-graph', style={'height': '100%'}, \
+                        config={'displayModeBar': False}, figure={
+                        'layout': {
+                            'plot_bgcolor': '#222222',
+
+                                'paper_bgcolor': '#222222',
+                        }
+                    })
+                ]),
+                dcc.Interval(id='interval-component', interval=1000, n_intervals=0),
+                dcc.Store(id='selected_house_id', data=selected_house_id),
+                dcc.Store(id='timestamp', data=timestamp),
+                dcc.Store(id='end_timestamp', data=end_timestamp)
+            ])
+        ])
     ])
+], fluid=True)
 
 historical_time_irr = []
 historical_time_load = []
@@ -136,121 +171,9 @@ def update_household_dropdown(selected_county, selected_state):
     [Input('selected_house_id', 'data')]
 )
 def update_house_title(selected_house_id):
-    return f"Live PV Disaggregation for House {selected_house_id}"
-
-"""@app.callback(
-    Output('irradiance-graph', 'figure'),
-    [Input('interval-component', 'n_intervals'),
-     Input('start-button', 'n_clicks')],
-    [State('selected_house_id', 'data')]
-)
-def update_irradiance_graph(n_intervals, start_clicks, house_id):
-    global historical_time_irr, historical_irr, timestamp
-    print(end_timestamp)
-    if start_clicks % 2 == 0:  # Even clicks or initial load
-        return go.Figure()
-
-    if timestamp >= end_timestamp or paused:
-        raise dash.exceptions.PreventUpdate
-
-    try:
-        print(timestamp)
-        irradiance = pgapi.getIrradiance(house_id, timestamp)
-        historical_irr.append(irradiance)
-    except:
-        historical_irr.append(None)
-    historical_time_irr.append(timestamp)
-
-    visible_irr = historical_irr
-    visible_time = historical_time_irr
-
-    trace_irr = go.Scatter(
-        x=visible_time,
-        y=visible_irr,
-        mode='lines+markers',
-        name='Irradiance',
-        line=dict(color='green')
-    )
-
-    layout = go.Layout(
-        xaxis=dict(title=''),
-        yaxis=dict(title='kWh'),
-        plot_bgcolor='#343a40',
-        paper_bgcolor='#343a40',
-        font=dict(color='#6c757d'),
-        showlegend=True
-    )
-
-    timestamp += pd.Timedelta(minutes=15)
-
-    return {'data': [trace_irr], 'layout': layout}
-
-@app.callback(
-    Output('net-load-pv-graph', 'figure'),
-    [Input('interval-component', 'n_intervals'),
-     Input('start-button', 'n_clicks'),
-     Input('pause-button', 'n_clicks')],
-    [State('selected_house_id', 'data')]
-)
-def update_net_load_pv_graph(n_intervals, start_clicks, pause_clicks, house_id):
-    global historical_time_load, historical_net_load, historical_pv, timestamp, paused
-
-    if paused:
-        raise dash.exceptions.PreventUpdate
-    elif start_clicks % 2 == 0:  # Even clicks or initial load or paused
-        return go.Figure()
-
-    if timestamp >= end_timestamp:
-        raise dash.exceptions.PreventUpdate
-
-    if not historical_time_load:
-        historical_time_load.append(timestamp)
-        historical_net_load.append(0)
-        historical_pv.append(0)
-    else:
-        current_time = historical_time_load[-1] + pd.Timedelta(minutes=15)
-        historical_time_load.append(current_time)
-
-    try:
-        net_load = pgapi.getNetLoad(house_id, timestamp)
-        historical_net_load.append(net_load)
-    except:
-        historical_net_load.append(None)
-
-    try:
-        pv_load = pgapi.getPVLoad(house_id, timestamp)
-        historical_pv.append(pv_load)
-    except:
-        historical_pv.append(None)
-
-    net_load_trace = go.Scatter(
-        x=historical_time_load,
-        y=historical_net_load,
-        mode='lines+markers',
-        name='Net Load'
-    )
-
-    pv_trace = go.Scatter(
-        x=historical_time_load,
-        y=historical_pv,
-        mode='lines+markers',
-        name='PV Value'
-    )
-
-    layout = go.Layout(
-        xaxis=dict(title=''),
-        yaxis=dict(title='kWh'),
-        plot_bgcolor='#343a40',
-        paper_bgcolor='#343a40',
-        font=dict(color='#6c757d'),
-        showlegend=True
-    )
-
-    return {'data': [net_load_trace, pv_trace], 'layout': layout}
-"""
-
-
-
+    if isinstance(selected_house_id, list):
+      return f"Solar Estimation for House {selected_house_id[0]}"
+    f"Solar Estimation for House {selected_house_id}"
 
 @app.callback(
     [Output('irradiance-graph', 'figure'),
@@ -261,10 +184,13 @@ def update_net_load_pv_graph(n_intervals, start_clicks, pause_clicks, house_id):
     [State('selected_house_id', 'data')]
 )
 def update_graphs(n_intervals, start_clicks, pause_clicks, house_id):
-    global historical_time_irr, historical_irr, historical_time_load, historical_net_load, historical_pv, timestamp, paused
+    global historical_time_irr, historical_irr, historical_time_load, \
+           historical_net_load, historical_pv, timestamp, paused
+    if start_clicks % 2 == 0:
+        return go.Figure(layout={'plot_bgcolor': '#222222', 'paper_bgcolor': '#222222'}), \
+               go.Figure(layout={'plot_bgcolor': '#222222', 'paper_bgcolor': '#222222'})
 
-    if start_clicks % 2 == 0:  # Even clicks or initial load
-        return go.Figure(), go.Figure()
+
 
     if timestamp >= end_timestamp or paused:
         raise dash.exceptions.PreventUpdate
@@ -277,12 +203,20 @@ def update_graphs(n_intervals, start_clicks, pause_clicks, house_id):
         current_time = historical_time_load[-1] + pd.Timedelta(minutes=15)
         historical_time_load.append(current_time)
 
+
+    if not historical_time_irr:
+        historical_time_irr.append(timestamp)
+        historical_irr.append(0)
+    else:
+        current_time = historical_time_irr[-1] + pd.Timedelta(minutes=15)
+        historical_time_irr.append(current_time)
+
+
     try:
         irradiance = pgapi.getIrradiance(house_id, timestamp)
         historical_irr.append(irradiance)
     except:
         historical_irr.append(None)
-    historical_time_irr.append(timestamp)
 
     try:
         net_load = pgapi.getNetLoad(house_id, timestamp)
@@ -324,19 +258,16 @@ def update_graphs(n_intervals, start_clicks, pause_clicks, house_id):
     layout = go.Layout(
         xaxis=dict(title=''),
         yaxis=dict(title='kWh'),
-        plot_bgcolor='#343a40',
-        paper_bgcolor='#343a40',
+        plot_bgcolor='#222222',
+        paper_bgcolor='#222222',
         font=dict(color='#6c757d'),
         showlegend=True
     )
 
     timestamp += pd.Timedelta(minutes=15)
 
-    return {'data': [trace_irr], 'layout': layout}, {'data': [net_load_trace, pv_trace], 'layout': layout}
-
-
-
-
+    return {'data': [trace_irr], 'layout': layout}, {'data': [net_load_trace, \
+            pv_trace], 'layout': layout}
 
 
 @app.callback(
@@ -345,7 +276,8 @@ def update_graphs(n_intervals, start_clicks, pause_clicks, house_id):
     [State('interval-component', 'n_intervals')]
 )
 def reset_button_click_counter(n_clicks, n_intervals):
-    global timestamp, historical_time_irr, historical_time_load, historical_net_load, historical_pv, historical_irr
+    global timestamp, historical_time_irr, historical_time_load, historical_net_load, \
+           historical_pv, historical_irr
 
     if n_clicks % 2 == 0:
         reset_data()
@@ -355,7 +287,8 @@ def reset_button_click_counter(n_clicks, n_intervals):
         return n_clicks
 
 def reset_data():
-    global historical_time_irr, historical_time_load, historical_net_load, historical_pv, historical_irr
+    global historical_time_irr, historical_time_load, historical_net_load, \
+           historical_pv, historical_irr
     historical_time_irr = []
     historical_time_load = []
     historical_net_load = []
@@ -395,7 +328,6 @@ def update_date_range_disabled(state_value, county_value, household_value):
     else:
         return True
 
-
 @app.callback(
     [Output('timestamp', 'data'),
      Output('end_timestamp', 'data')],
@@ -406,10 +338,8 @@ def update_timestamp(start_date, end_date):
     global timestamp, end_timestamp
     timestamp = pd.to_datetime(start_date)
     end_timestamp = pd.to_datetime(end_date)
-    print('udpated timestamps', timestamp, end_timestamp)
+    print('updated timestamps', timestamp, end_timestamp)
     return timestamp, end_timestamp
-
 
 if __name__ == '__main__':
     app.run_server(host="0.0.0.0", port=8052, debug=True)
-

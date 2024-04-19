@@ -13,14 +13,18 @@ state_select = [{"label": item, "value": item} for item in state_list_unique]
 start_default, end_default = pgapi.getDefaultDates()
 external_stylesheets = [dbc.themes.DARKLY]
 
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets, suppress_callback_exceptions=True)
-app.css.append_css({"external_url": "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"})
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets, \
+    suppress_callback_exceptions=True)
+app.css.append_css({"external_url": \
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"})
 
 app.layout = dbc.Container([
     dcc.Location(id='url', refresh=False),
     html.Div(id="page-content"),html.Div(className='wrapper', children=[
-        html.Div(className='content-wrapper', style={'margin-right': '5%', 'margin-left':'5%','margin-bottom':'5%', 'margin-top':'3%'}, children=[
-            html.H1('Solar Insights', style={'padding-bottom': '2%', 'padding-left':'10px'}, className='content-header'),
+        html.Div(className='content-wrapper', style={'margin-right': '5%', \
+                'margin-left':'5%','margin-bottom':'5%', 'margin-top':'3%'}, children=[
+            html.H1('Solar Insights', style={'padding-bottom': '2%', \
+                    'padding-left':'10px'}, className='content-header'),
             html.Div(className='content', children=[
                 html.Div(className='container-fluid', children=[
                     html.Div(className='row', children=[
@@ -71,21 +75,32 @@ app.layout = dbc.Container([
                                     dash_table.DataTable(
                                         id='stateDatatable',
                                         columns=[
-                                            {'name': 'State', 'id': 'State', 'type': 'text'},
-                                            {'name': 'Peak Net Load', 'id': 'Peak Net Load', 'type': 'text'},
-                                            {'name': 'Min Net Load', 'id': 'Min Net Load', 'type': 'text'},
-                                            {'name': 'Peak PV Generation', 'id': 'Peak PV Generation', 'type': 'text'},
-                                            {'name': 'Peak Gross Load', 'id': 'Peak Gross Load', 'type': 'text'},
-                                            {'name': 'Average Net Load', 'id': 'Average Net Load', 'type': 'text'},
-                                            {'name': 'Average PV Generation', 'id': 'Average PV Generation', 'type': 'text'},
-                                            {'name': 'Average Gross Load', 'id': 'Average Gross Load', 'type': 'text'},
-                                            {'name': 'Peak PV Penetration', 'id': 'Peak PV Penetration', 'type': 'text'},
-                                            {'name': 'Mean PV Penetration', 'id': 'Mean PV Penetration', 'type': 'text'}
+                                            {'name': 'State', 'id': 'State', \
+                                                'type': 'text'},
+                                            {'name': 'Peak Net Load', 'id': \
+                                                'Peak Net Load', 'type': 'text'},
+                                            {'name': 'Min Net Load', 'id': 'Min Net Load', \
+                                                'type': 'text'},
+                                            {'name': 'Peak PV Generation', 'id': \
+                                                'Peak PV Generation', 'type': 'text'},
+                                            {'name': 'Peak Gross Load', 'id': \
+                                                'Peak Gross Load', 'type': 'text'},
+                                            {'name': 'Average Net Load', 'id': \
+                                                'Average Net Load', 'type': 'text'},
+                                            {'name': 'Average PV Generation', 'id': \
+                                                'Average PV Generation', 'type': 'text'},
+                                            {'name': 'Average Gross Load', 'id': \
+                                                'Average Gross Load', 'type': 'text'},
+                                            {'name': 'Peak PV Penetration', 'id': \
+                                                'Peak PV Penetration', 'type': 'text'},
+                                            {'name': 'Mean PV Penetration', 'id': \
+                                                'Mean PV Penetration', 'type': 'text'}
                                         ],
                                         page_current=0,
                                         page_size=1,
                                         page_count=1,
-                                        style_table={'overflowX': 'auto', 'color': '#6c757d', 'padding-bottom': '1%'},
+                                        style_table={'overflowX': 'auto', 'color': \
+                                            '#6c757d', 'padding-bottom': '1%'},
                                     )
                                 ]
                             )
@@ -99,21 +114,32 @@ app.layout = dbc.Container([
                             dash_table.DataTable(
                                 id='countyDatatable',
                                 columns=[
-                                    {'name': 'County', 'id': 'County', 'type': 'text'},
-                                    {'name': 'Peak Net Load', 'id': 'Peak Net Load', 'type': 'text'},
-                                    {'name': 'Min Net Load', 'id': 'Min Net Load', 'type': 'text'},
-                                    {'name': 'Peak PV Generation', 'id': 'Peak PV Generation', 'type': 'text'},
-                                    {'name': 'Peak Gross Load', 'id': 'Peak Gross Load', 'type': 'text'},
-                                    {'name': 'Average Net Load', 'id': 'Average Net Load', 'type': 'text'},
-                                    {'name': 'Average PV Generation', 'id': 'Average PV Generation', 'type': 'text'},
-                                    {'name': 'Average Gross Load', 'id': 'Average Gross Load', 'type': 'text'},
-                                    {'name': 'Peak PV Penetration', 'id': 'Peak PV Penetration', 'type': 'text'},
-                                    {'name': 'Mean PV Penetration', 'id': 'Mean PV Penetration', 'type': 'text'}
+                                    {'name': 'County', 'id': 'County', 'type': \
+                                        'text'},
+                                    {'name': 'Peak Net Load', 'id': 'Peak Net Load', \
+                                        'type': 'text'},
+                                    {'name': 'Min Net Load', 'id': 'Min Net Load', \
+                                        'type': 'text'},
+                                    {'name': 'Peak PV Generation', 'id': 'Peak PV Generation',
+                                        'type': 'text'},
+                                    {'name': 'Peak Gross Load', 'id': 'Peak Gross Load', \
+                                        'type': 'text'},
+                                    {'name': 'Average Net Load', 'id': 'Average Net Load', \
+                                        'type': 'text'},
+                                    {'name': 'Average PV Generation', 'id': 'Average PV Generation', \
+                                        'type': 'text'},
+                                    {'name': 'Average Gross Load', 'id': 'Average Gross Load', \
+                                        'type': 'text'},
+                                    {'name': 'Peak PV Penetration', 'id': 'Peak PV Penetration', \
+                                        'type': 'text'},
+                                    {'name': 'Mean PV Penetration', 'id': 'Mean PV Penetration', \
+                                        'type': 'text'}
                                 ],
                                 page_current=0,
                                 page_size=1,
                                 page_count=1,
-                                style_table={'overflowX': 'auto', 'color': '#6c757d', 'padding-bottom': '1%'},
+                                style_table={'overflowX': 'auto', 'color': '#6c757d', \
+                                    'padding-bottom': '1%'},
                             )
                         ])
                     ])
@@ -126,18 +152,28 @@ app.layout = dbc.Container([
                                 id='householdDatatable',
                                 columns=[
                                     {'name': 'House', 'id': 'House', 'type': 'text'},
-                                    {'name': 'Peak Net Load', 'id': 'Peak Net Load', 'type': 'text'},
-                                    {'name': 'Min Net Load', 'id': 'Min Net Load', 'type': 'text'},
-                                    {'name': 'Peak PV Generation', 'id': 'Peak PV Generation', 'type': 'text'},
-                                    {'name': 'Peak Gross Load', 'id': 'Peak Gross Load', 'type': 'text'},
-                                    {'name': 'Average Net Load', 'id': 'Average Net Load', 'type': 'text'},
-                                    {'name': 'Average PV Generation', 'id': 'Average PV Generation', 'type': 'text'},
-                                    {'name': 'Average Gross Load', 'id': 'Average Gross Load', 'type': 'text'},
-                                    {'name': 'Peak PV Penetration', 'id': 'Peak PV Penetration', 'type': 'text'},
-                                    {'name': 'Mean PV Penetration', 'id': 'Mean PV Penetration', 'type': 'text'}
+                                    {'name': 'Peak Net Load', 'id': 'Peak Net Load', \
+                                        'type': 'text'},
+                                    {'name': 'Min Net Load', 'id': 'Min Net Load', \
+                                        'type': 'text'},
+                                    {'name': 'Peak PV Generation', 'id': 'Peak PV Generation', \
+                                        'type': 'text'},
+                                    {'name': 'Peak Gross Load', 'id': 'Peak Gross Load', \
+                                        'type': 'text'},
+                                    {'name': 'Average Net Load', 'id': 'Average Net Load', \
+                                        'type': 'text'},
+                                    {'name': 'Average PV Generation', 'id': 'Average PV Generation', \
+                                        'type': 'text'},
+                                    {'name': 'Average Gross Load', 'id': 'Average Gross Load', \
+                                        'type': 'text'},
+                                    {'name': 'Peak PV Penetration', 'id': 'Peak PV Penetration', \
+                                        'type': 'text'},
+                                    {'name': 'Mean PV Penetration', 'id': 'Mean PV Penetration', \
+                                        'type': 'text'}
                                 ],
                                 data=[],
-                                style_table={'overflowX': 'auto', 'color': '#6c757d', 'padding-bottom': '1%'},
+                                style_table={'overflowX': 'auto', 'color': '#6c757d', \
+                                    'padding-bottom': '1%'},
                             )
                         ])
                     ])
@@ -206,7 +242,8 @@ def update_household_dropdown_options(selected_state, selected_county):
     if not selected_state and selected_county:
         return []
 
-    if selected_state is not None and selected_county is not None and len(selected_state) > 0 and len(selected_county) > 0:
+    if selected_state is not None and selected_county is not None and \
+        len(selected_state) > 0 and len(selected_county) > 0:
         house_ids = pgapi.getHouseIds(selected_state, selected_county)
         options = [{"label": str(house_id), "value": str(house_id)} \
             for house_id in house_ids]
@@ -284,7 +321,8 @@ def update_state_table(start_date, end_date, state_values):
 
 
     # calculate peak load and pv
-    grouped_state = filtered_df_state.groupby('Timestamp') [['PV Generation', 'Net Load', 'Gross Load', 'bldg_id']].sum().reset_index()
+    grouped_state = filtered_df_state.groupby('Timestamp') [['PV Generation', \
+        'Net Load', 'Gross Load', 'bldg_id']].sum().reset_index()
     grouped_state['PV Penetration'] = round(grouped_state['PV Generation'] / grouped_state['Gross Load'], 3)
     peak_state_PV = round(grouped_state['PV Penetration'].min(), 3)
     peak_state_NL = round(grouped_state['Net Load'].max(), 3)
@@ -331,12 +369,14 @@ def update_state_graph(start_date, end_date, state_values):
     if state_values is not None and len(state_values) > 0:
         items = pgapi.getLastRecordingByState(state_values, start_date, end_date)
         filtered_df_state = pd.DataFrame(items, columns=['Net Load', 'PV Generation', 'Timestamp', 'bldg_id'])
-        filtered_df_state['Gross Load'] = round(filtered_df_state['PV Generation'].abs() + filtered_df_state['Net Load'], 10)
+        filtered_df_state['Gross Load'] = round(filtered_df_state['PV Generation'].abs() \
+            + filtered_df_state['Net Load'], 10)
 
     monthly_avg = pd.DataFrame([])
 
     if state_values:
-        grouped_state = filtered_df_state.groupby('Timestamp') [['PV Generation','Net Load', 'Gross Load', 'bldg_id']].sum().reset_index()
+        grouped_state = filtered_df_state.groupby('Timestamp') [['PV Generation','Net Load', \
+            'Gross Load', 'bldg_id']].sum().reset_index()
         grouped_state['PV Penetration'] = grouped_state['PV Generation'] / grouped_state['Gross Load']
         grouped_state['Timestamp'] = pd.to_datetime(grouped_state['Timestamp'])
         grouped_state['Month'] = grouped_state['Timestamp'].dt.month
@@ -397,7 +437,8 @@ def update_county_table(start_date, end_date, county_values):
     filtered_df_county = filtered_df
 
    # calculate peak load and pv
-    grouped_county = filtered_df_county.groupby('Timestamp')[['PV Generation','Net Load','Gross Load', 'bldg_id']].sum().reset_index()
+    grouped_county = filtered_df_county.groupby('Timestamp')[['PV Generation','Net Load', \
+        'Gross Load', 'bldg_id']].sum().reset_index()
     grouped_county['PV Penetration'] = round(grouped_county['PV Generation'] / \
         grouped_county['Gross Load'], 3)
     peak_county_PV = round(grouped_county['PV Generation'].min(), 3)
@@ -444,12 +485,14 @@ def update_county_graph(start_date, end_date, state_values, county_values):
     if county_values is not None and len(county_values) > 0:
         items = pgapi.getLastRecordingByCounty(county_values, start_date, end_date)
         filtered_df_county = pd.DataFrame(items, columns=['Net Load', 'PV Generation', 'Timestamp', 'bldg_id'])
-        filtered_df_county['Gross Load'] = round(filtered_df_county['PV Generation'].abs() + filtered_df_county['Net Load'], 10)
+        filtered_df_county['Gross Load'] = round(filtered_df_county['PV Generation'].abs() \
+            + filtered_df_county['Net Load'], 10)
 
     monthly_avg = pd.DataFrame([])
 
     if county_values:
-        grouped_county = filtered_df_county.groupby('Timestamp')[['PV Generation', 'Net Load', 'Gross Load', 'bldg_id']].sum().reset_index()
+        grouped_county = filtered_df_county.groupby('Timestamp')[['PV Generation', \
+            'Net Load', 'Gross Load', 'bldg_id']].sum().reset_index()
         grouped_county['PV Penetration'] = grouped_county['PV Generation'] / grouped_county['Gross Load']
         grouped_county['Timestamp'] = pd.to_datetime(grouped_county['Timestamp'])
         grouped_county['Month'] = grouped_county['Timestamp'].dt.month
@@ -467,9 +510,11 @@ def update_county_graph(start_date, end_date, state_values, county_values):
     for month in month_unique:
         month_df = monthly_avg[monthly_avg['Month'] == month]
         fig.add_trace(go.Scatter(x=monthly_avg['HourMinute'], y=monthly_avg['Net Load'], \
-                mode='lines', name=f"""Net Load for Tompkins County: {pd.to_datetime(month, format='%m').strftime('%B')}""", hovertemplate='%{y:.2f}'))
+                mode='lines', name=f"""Net Load for Tompkins County: \
+                    {pd.to_datetime(month, format='%m').strftime('%B')}""", hovertemplate='%{y:.2f}'))
         fig.add_trace(go.Scatter(x=monthly_avg['HourMinute'], y=monthly_avg['Gross Load'], \
-            mode='lines', name=f"""Gross Load for Tompkins County: {pd.to_datetime(month, format='%m').strftime('%B')}""", hovertemplate='%{y:.2f}'))
+            mode='lines', name=f"""Gross Load for Tompkins County: \
+                {pd.to_datetime(month, format='%m').strftime('%B')}""", hovertemplate='%{y:.2f}'))
     return fig
 
 @app.callback(
@@ -542,7 +587,8 @@ def update_household_graph(start_date, end_date, state_values, county_values, ho
             filtered_df['Net Load'], 10)
 
         print(filtered_df.head())
-        monthly_avg = filtered_df.groupby('Timestamp') [['PV Generation', 'Net Load', 'Gross Load', 'bldg_id']].sum().reset_index()
+        monthly_avg = filtered_df.groupby('Timestamp') [['PV Generation', 'Net Load', \
+            'Gross Load', 'bldg_id']].sum().reset_index()
         monthly_avg['PV Penetration'] = monthly_avg['PV Generation'] / monthly_avg['Gross Load']
         monthly_avg['Timestamp'] = pd.to_datetime(monthly_avg['Timestamp'])
         monthly_avg['Month'] = monthly_avg['Timestamp'].dt.month
@@ -557,12 +603,13 @@ def update_household_graph(start_date, end_date, state_values, county_values, ho
         for month in monthly_avg['Month'].unique():
             month_df = monthly_avg[monthly_avg['Month'] == month]
             fig.add_trace(go.Scatter(x=monthly_avg['HourMinute'], y=monthly_avg['Net Load'], \
-                mode='lines', name=f"""Net Load for house {bldg_id}: {pd.to_datetime(month, format='%m').strftime('%B')}""", hovertemplate='%{y:.2f}'))
+                mode='lines', name=f"""Net Load for house {bldg_id}: \
+                    {pd.to_datetime(month, format='%m').strftime('%B')}""", hovertemplate='%{y:.2f}'))
             fig.add_trace(go.Scatter(x=monthly_avg['HourMinute'], y=monthly_avg['Gross Load'], \
-                mode='lines', name=f"""Gross Load for house {bldg_id}: {pd.to_datetime(month, format='%m').strftime('%B')}""", hovertemplate='%{y:.2f}'))
+                mode='lines', name=f"""Gross Load for house {bldg_id}: \
+                    {pd.to_datetime(month, format='%m').strftime('%B')}""", hovertemplate='%{y:.2f}'))
 
     return fig
 
 if __name__ == '__main__':
     app.run_server(host="0.0.0.0", debug=True)
-
